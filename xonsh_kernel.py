@@ -1,7 +1,11 @@
 from __future__ import print_function
 
 from metakernel import MetaKernel, ProcessMetaKernel, REPLWrapper, u
+import builtins
 import os
+builtins.__xonsh_env__ = os.environ.copy()
+builtins.aliases = []
+from xonsh import completer
 import re
 
 
@@ -38,6 +42,7 @@ class XonshKernel(ProcessMetaKernel):
 
         extra_init_cmd = "$PAGER='cat'"
         os.environ['PAGER'] = 'cat'
+        self.completer = completer.Completer()
         return REPLWrapper('xonsh', prompt_regex, prompt_change_cmd,
                            prompt_emit_cmd=prompt_emit_cmd,
                            extra_init_cmd=extra_init_cmd)
@@ -46,6 +51,13 @@ class XonshKernel(ProcessMetaKernel):
         output = super(XonshKernel, self).do_execute_direct(code)
         output = output.splitlines()
         return '\n'.join(output[:-1])
+
+    def get_completions(self, info):
+        start = info['column'] - len(info['obj'])
+        comps = self.completer.complete(info['obj'], info['line'], start,
+                                        info['column'])
+        shell_magic = self.line_magics['shell']
+        return comps + shell_magic.get_completions(info)
 
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
         obj = info.get('help_obj', '')
