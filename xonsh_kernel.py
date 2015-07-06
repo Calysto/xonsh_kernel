@@ -36,8 +36,11 @@ class XonshKernel(ProcessMetaKernel):
             prompt_change_cmd = u("$PROMPT='{0}'; $MULTILINE_PROMPT='{1}'")
             prompt_emit_cmd = None
 
+        extra_init_cmd = "$PAGER='cat'"
+        os.environ['PAGER'] = 'cat'
         return REPLWrapper('xonsh', prompt_regex, prompt_change_cmd,
-                           prompt_emit_cmd=prompt_emit_cmd)
+                           prompt_emit_cmd=prompt_emit_cmd,
+                           extra_init_cmd=extra_init_cmd)
 
     def do_execute_direct(self, code):
         output = super(XonshKernel, self).do_execute_direct(code)
@@ -51,7 +54,10 @@ class XonshKernel(ProcessMetaKernel):
                 return None
             else:
                 return ""
-        return self.do_execute_direct('help(%s)' % obj)
+        output = self.do_execute_direct('man %s' % obj)
+        if output.startswith('No manual entry for'):
+            output = self.do_execute_direct('help(%s)' % obj)
+        return output
 
 if __name__ == '__main__':
     from IPython.kernel.zmq.kernelapp import IPKernelApp
