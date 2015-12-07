@@ -44,12 +44,6 @@ if svem_flag in sys.argv:
     # Die, setuptools, die.
     sys.argv.remove(svem_flag)
 
-with open('octave_kernel.py', 'rb') as fid:
-    for line in fid:
-        line = line.decode('utf-8')
-        if line.startswith('__version__'):
-            version = line.strip().split()[-1][1:-1]
-            break
 
 with open('xonsh_kernel.py', 'rb') as fid:
     for line in fid:
