@@ -33,18 +33,27 @@ with open('xonsh_kernel.py', 'rb') as fid:
             version = line.strip().split()[-1][1:-1]
             break
 
-user = '--user' in sys.argv
-with TemporaryDirectory() as td:
-    os.chmod(td, 0o755)  # Starts off as 700, not user readable
-    with open(os.path.join(td, 'kernel.json'), 'w') as f:
-        json.dump(kernel_json, f, sort_keys=True)
-    kernel_name = kernel_json['name']
+
+def _is_root():
     try:
-        install_kernel_spec(td, kernel_name, user=user,
-                            replace=True)
-    except:
-        install_kernel_spec(td, kernel_name, user=not user,
-                            replace=True)
+        return os.geteuid() == 0
+    except AttributeError:
+        return False  # assume not an admin on non-Unix platforms
+
+
+if 'develop' in sys.argv or 'install' in sys.argv:
+    user = '--user' in sys.argv or not _is_root()
+    with TemporaryDirectory() as td:
+        os.chmod(td, 0o755)  # Starts off as 700, not user readable
+        with open(os.path.join(td, 'kernel.json'), 'w') as f:
+            json.dump(kernel_json, f, sort_keys=True)
+        kernel_name = kernel_json['name']
+        try:
+            install_kernel_spec(td, kernel_name, user=user,
+                                replace=True)
+        except:
+            install_kernel_spec(td, kernel_name, user=not user,
+                                replace=True)
 
 setup(name='xonsh_kernel',
       version=version,
