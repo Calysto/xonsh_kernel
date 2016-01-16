@@ -2,11 +2,19 @@ A Jupyter/IPython kernel for Xonsh
 
 This requires IPython 3.
 
-To test it, install via ``pip`` or ``setup.py``, then::
+To install::
 
-    ipython qtconsole --kernel=xonsh_kernel
+    pip install xonsh_kernel
+    python -m xonsh_kernel.install
 
-Or select the Xonsh Kernel in the IPython Notebook.
+To use it, run one of:
+
+.. code:: shell
+
+    ipython notebook
+    # In the notebook interface, select Xonsh from the 'New' menu
+    ipython qtconsole --kernel xonsh
+    ipython console --kernel xonsh
 
 This is based on `MetaKernel <http://pypi.python.org/pypi/metakernel>`_,
 which means it features a standard set of magics.
