@@ -13,10 +13,10 @@ kernel_json = {
     "argv": [sys.executable,
              "-m", "xonsh_kernel",
              "-f", "{connection_file}"],
-    "display_name": "Xonsh",
+    "display_name": "Calysto Xonsh",
     "language": "xonsh",
     'codemirror_mode': 'shell',
-    "name": "xonsh",
+    "name": "calysto_xonsh",
 }
 
 
