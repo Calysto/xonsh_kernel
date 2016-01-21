@@ -32,20 +32,11 @@ class XonshKernel(MetaKernel):
         hist = builtins.__xonsh_history__
         if not silent:  # stdout response
             if out:
-                self.Print(out)
+                self._respond_in_chunks('stdout', out.strip())
             if err:
-                self.Error(err)
-            if len(hist) > 0 and out and not err:
-                self.Print(hist.outs[-1])
-                response = {'name': 'stdout', 'text': hist.outs[-1]}
-                self.send_response(self.iopub_socket, 'stream', response)
-
-        if interrupted:
-            return
-
-        rtn = 0 if len(hist) == 0 else hist.rtns[-1]
-        if 0 < rtn:
-            self.Error(rtn)
+                self._respond_in_chunks('stderr', err.strip())
+            if len(hist) > 0 and not out and not err:
+                return hist.outs[-1]
 
     def _do_execute_direct(self, code):
         shell = builtins.__xonsh_shell__
@@ -75,6 +66,20 @@ class XonshKernel(MetaKernel):
             error = err.read()
         return output, error, interrupted
 
+    def _respond_in_chunks(self, name, s, chunksize=1024):
+        if s is None:
+            return
+        n = len(s)
+        if n == 0:
+            return
+        lower = range(0, n, chunksize)
+        upper = range(chunksize, n+chunksize, chunksize)
+        for l, u in zip(lower, upper):
+            if name == 'stderr':
+                self.Error(s[l:u])
+            else:
+                self.Print(s[l:u])
+
     def do_complete(self, code, pos):
         """Get completions."""
         shell = builtins.__xonsh_shell__
@@ -84,13 +89,15 @@ class XonshKernel(MetaKernel):
         return message
 
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
+        import os
+        os.environ['PAGER'] = 'cat'
         obj = info.get('help_obj', '')
         if not obj or len(obj.split()) > 1:
             if none_on_fail:
                 return None
             else:
                 return ""
-        output, _, _ = self._do_execute_direct('man %s' % obj)
-        if output.startswith('No manual entry for'):
+        output, _, _ = self._do_execute_direct('/usr/bin/man %s' % obj)
+        if not output or output.startswith('No manual entry for'):
             output, _, _ = self._do_execute_direct('help(%s)' % obj)
         return output
