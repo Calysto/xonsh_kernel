@@ -1,16 +1,20 @@
 from __future__ import print_function
 import io
 import builtins
+from pprint import pformat
 import os
 from tempfile import SpooledTemporaryFile
 
 from metakernel import MetaKernel
 from xonsh import __version__ as version
-from xonsh.tools import redirect_stdout, redirect_stderr, swap
+from xonsh.tools import redirect_stdout, redirect_stderr, swap, ON_POSIX
 
 from . import __version__
 
 MAX_SIZE = 8388608  # 8 Mb
+
+if ON_POSIX:
+    os.environ['PAGER'] = 'cat'
 
 
 class XonshKernel(MetaKernel):
@@ -27,12 +31,6 @@ class XonshKernel(MetaKernel):
                      'version': __version__
                      }
 
-    def __init__(self, *args, **kwargs):
-        super(XonshKernel, self).__init__(*args, **kwargs)
-        os.environ['PAGER'] = 'cat'
-        output, _, _ = self._do_execute_direct('which man')
-        self._man = output.strip()
-
     def do_execute_direct(self, code, silent=False):
         out, err, interrupted = self._do_execute_direct(code)
         hist = builtins.__xonsh_history__
@@ -41,6 +39,10 @@ class XonshKernel(MetaKernel):
                 self._respond_in_chunks('stdout', out.strip())
             if err:
                 self._respond_in_chunks('stderr', err.strip())
+            if hasattr(builtins, '_') and builtins._ is not None:
+                # rely on sys.displayhook functionality
+                self._respond_in_chunks('stdout', pformat(builtins._))
+                builtins._ = None
             if len(hist) > 0 and not out and not err:
                 return hist.outs[-1]
 
@@ -70,6 +72,8 @@ class XonshKernel(MetaKernel):
         if err.tell() > 0:
             err.seek(0)
             error = err.read()
+        out.close()
+        err.close()
         return output, error, interrupted
 
     def _respond_in_chunks(self, name, s, chunksize=1024):
@@ -103,8 +107,8 @@ class XonshKernel(MetaKernel):
             else:
                 return ""
         output = ''
-        if self._man:
-            output, _, _ = self._do_execute_direct('%s %s' % (self._man, obj))
+        if ON_POSIX:
+            output, _, _ = self._do_execute_direct('man %s' % obj)
         if not output or output.startswith('No manual entry for'):
             output, _, _ = self._do_execute_direct('help(%s)' % obj)
         return output
