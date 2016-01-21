@@ -109,6 +109,12 @@ class XonshKernel(MetaKernel):
         output = ''
         if ON_POSIX:
             output, _, _ = self._do_execute_direct('man %s' % obj)
-        if not output or output.startswith('No manual entry for'):
+            if output.startswith('No manual entry for'):
+                output = ''
+        else:
+            output, _, _, = self._do_execute_direct('help %s' % obj)
+            if output.startswith('This command is not supported'):
+                output = ''
+        if not output:
             output, _, _ = self._do_execute_direct('help(%s)' % obj)
         return output
