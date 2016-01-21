@@ -1,7 +1,7 @@
 from __future__ import print_function
 import io
 import builtins
-from pprint import pformat
+import os
 from tempfile import SpooledTemporaryFile
 
 from metakernel import MetaKernel
@@ -18,7 +18,7 @@ class XonshKernel(MetaKernel):
     implementation_version = __version__
     language = 'xonsh'
     language_version = version
-    banner = 'Calysto Xonsh - the Python-ish, BASHwards-looking shell'
+    banner = 'Xonsh - the Python-ish, BASHwards-looking shell'
     language_info = {'name': 'xonsh',
                      'pygments_lexer': 'xonsh',
                      'codemirror_mode': 'shell',
@@ -26,6 +26,12 @@ class XonshKernel(MetaKernel):
                      'file_extension': '.xsh',
                      'version': __version__
                      }
+
+    def __init__(self, *args, **kwargs):
+        super(XonshKernel, self).__init__(*args, **kwargs)
+        os.environ['PAGER'] = 'cat'
+        output, _, _ = self._do_execute_direct('which man')
+        self._man = output.strip()
 
     def do_execute_direct(self, code, silent=False):
         out, err, interrupted = self._do_execute_direct(code)
@@ -83,21 +89,22 @@ class XonshKernel(MetaKernel):
     def do_complete(self, code, pos):
         """Get completions."""
         shell = builtins.__xonsh_shell__
-        comps, beg, end = shell.completer.find_and_complete(code, pos, shell.ctx)
+        comps, beg, end = shell.completer.find_and_complete(code, pos,
+            shell.ctx)
         message = {'matches': comps, 'cursor_start': beg, 'cursor_end': end+1,
                    'metadata': {}, 'status': 'ok'}
         return message
 
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
-        import os
-        os.environ['PAGER'] = 'cat'
         obj = info.get('help_obj', '')
         if not obj or len(obj.split()) > 1:
             if none_on_fail:
                 return None
             else:
                 return ""
-        output, _, _ = self._do_execute_direct('/usr/bin/man %s' % obj)
+        output = ''
+        if self._man:
+            output, _, _ = self._do_execute_direct('%s %s' % (self._man, obj))
         if not output or output.startswith('No manual entry for'):
             output, _, _ = self._do_execute_direct('help(%s)' % obj)
         return output
