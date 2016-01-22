@@ -1,15 +1,22 @@
-A Jupyter/IPython kernel for Xonsh
+A Calysto Jupyter kernel for Xonsh.
 
-This requires IPython 3.
+To install::
 
-To test it, install via ``pip`` or ``setup.py``, then::
+    pip install xonsh_kernel
+    python -m xonsh_kernel.install
 
-    ipython qtconsole --kernel=xonsh_kernel
+To use it, run one of:
 
-Or select the Xonsh Kernel in the IPython Notebook.
+.. code:: shell
+
+    jupyter notebook
+    # In the notebook interface, select 'Calysto Xonsh' from the 'New' menu
+    ipython qtconsole --kernel calysto_xonsh
+    ipython console --kernel calysto_xonsh
 
 This is based on `MetaKernel <http://pypi.python.org/pypi/metakernel>`_,
-which means it features a standard set of magics.
+which means it features a standard set of %%magics.  Note that this is
+different from the kernel that is distributed with `Xonsh`.
 
 A sample notebook is available online_.
 
