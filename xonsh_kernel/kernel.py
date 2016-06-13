@@ -7,7 +7,12 @@ from tempfile import SpooledTemporaryFile
 
 from metakernel import MetaKernel
 from xonsh import __version__ as version
-from xonsh.tools import redirect_stdout, redirect_stderr, swap, ON_POSIX
+from xonsh.tools import redirect_stdout, redirect_stderr, swap
+try:
+    from xonsh.tools import ON_POSIX
+except ImportError:
+    ON_POSIX=None
+    pass
 
 from . import __version__
 
