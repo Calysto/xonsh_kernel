@@ -95,15 +95,6 @@ class XonshKernel(MetaKernel):
             else:
                 self.Print(s[l:u])
 
-    def do_complete(self, code, pos):
-        """Get completions."""
-        shell = builtins.__xonsh_shell__
-        comps, beg, end = shell.completer.find_and_complete(code, pos,
-            shell.ctx)
-        message = {'matches': comps, 'cursor_start': beg, 'cursor_end': end+1,
-                   'metadata': {}, 'status': 'ok'}
-        return message
-
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
         obj = info.get('help_obj', '')
         if not obj or len(obj.split()) > 1:
