@@ -11,5 +11,12 @@ class XonshKernelTests(jkt.KernelTests):
 
     code_hello_world = "print('hello, world')"
 
+    completion_samples = [
+        {
+            'text': 'frozense',
+            'matches': {'frozenset'},
+        },
+    ]
+
 if __name__ == '__main__':
     unittest.main()

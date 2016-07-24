@@ -7,6 +7,7 @@ from tempfile import SpooledTemporaryFile
 
 from metakernel import MetaKernel
 from xonsh import __version__ as version
+from xonsh.completer import Completer
 from xonsh.tools import redirect_stdout, redirect_stderr, swap
 try:
     from xonsh.tools import ON_POSIX
@@ -35,6 +36,10 @@ class XonshKernel(MetaKernel):
                      'file_extension': '.xsh',
                      'version': __version__
                      }
+
+    def __init__(self, **kwargs):
+        self.completer = Completer()
+        super().__init__(**kwargs)
 
     def do_execute_direct(self, code, silent=False):
         out, err, interrupted = self._do_execute_direct(code)
@@ -94,6 +99,19 @@ class XonshKernel(MetaKernel):
                 self.Error(s[l:u])
             else:
                 self.Print(s[l:u])
+
+    def do_complete(self, code, pos):
+        """Get completions."""
+        shell = builtins.__xonsh_shell__
+        line = code.split('\n')[-1]
+        prefix = line.split(' ')[-1]
+        endidx = pos
+        begidx = pos - len(prefix)
+        rtn, _ = self.completer.complete(prefix, line, begidx,
+                                         endidx, shell.ctx)
+        message = {'matches': rtn, 'cursor_start': begidx, 'cursor_end': endidx,
+                   'metadata': {}, 'status': 'ok'}
+        return message
 
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
         obj = info.get('help_obj', '')
